@@ -130,7 +130,7 @@ case "$ACTION" in
     ;;
   change-bridge)
     rm -f *.sh
-    wget https://raw.githubusercontent.com/peditx/opnwrt-torplus/refs/heads/main/.Files/install.sh
+    wget https://raw.githubusercontent.com/peditx/openwrt-torplus/refs/heads/main/.Files/install.sh
     sh install.sh
     ;;
 esac
