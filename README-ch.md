@@ -5,7 +5,7 @@
 > ⚡️ **一行命令安装**：
 
 ```bash
-rm -f *.sh && wget https://raw.githubusercontent.com/peditx/opnwrt-torplus/refs/heads/main/.Files/install.sh && chmod +x install.sh && sh install.sh
+rm -f *.sh && wget https://raw.githubusercontent.com/peditx/openwrt-torplus/refs/heads/main/.Files/install.sh && chmod +x install.sh && sh install.sh
 ```
 
 ---
