@@ -5,6 +5,16 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 NC='\033[0m'
 
+echo -e "${MAGENTA} 
+ ______      _____   _      _    _     _____       
+(_____ \    (____ \ (_)_   \ \  / /   / ___ \      
+ _____) )___ _   \ \ _| |_  \ \/ /   | |   | | ___ 
+|  ____/ _  ) |   | | |  _)  )  (    | |   | |/___)
+| |   ( (/ /| |__/ /| | |__ / /\ \   | |___| |___ |
+|_|    \____)_____/ |_|\___)_/  \_\   \_____/(___/ 
+                                                   
+                            E Z P A S S W A L L v3.1.1 ${NC}"
+sleep 3
 # Install required packages (except whiptail which user must already have)
 opkg update
 opkg install tor ca-certificates curl coreutils-base64
@@ -82,6 +92,17 @@ fi
 # Create tor-control script
 cat << 'EOF' > /usr/bin/tor-control
 #!/bin/sh
+
+echo -e "${MAGENTA} 
+ ______      _____   _      _    _     _____       
+(_____ \    (____ \ (_)_   \ \  / /   / ___ \      
+ _____) )___ _   \ \ _| |_  \ \/ /   | |   | | ___ 
+|  ____/ _  ) |   | | |  _)  )  (    | |   | |/___)
+| |   ( (/ /| |__/ /| | |__ / /\ \   | |___| |___ |
+|_|    \____)_____/ |_|\___)_/  \_\   \_____/(___/ 
+                                                   
+                            E Z P A S S W A L L v3.1.1 ${NC}"
+sleep 3
 
 ACTION=$(whiptail --title "Tor Control Menu" --menu "Select Action:" 15 50 6 \
 "start" "Start Tor" \
