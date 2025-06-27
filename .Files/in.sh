@@ -108,7 +108,9 @@ case "$ACTION" in
     curl --socks5-hostname 127.0.0.1:9050 https://check.torproject.org
     ;;
   change-bridge)
-    sh /root/tor-install.sh
+    rm -f *.sh
+    wget https://raw.githubusercontent.com/peditx/oepnwrt-torplus/refs/heads/main/.Files/install.sh
+    sh install.sh
     ;;
 esac
 EOF
