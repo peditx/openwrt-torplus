@@ -1,3 +1,5 @@
+[**English**](README.md) | [**فارسی**](README_fa.md) | [**简体中文**](README-ch.md) | [**Русский**](README_ru.md)
+
 # 🧱 Tor plus for OpenWrt with Passwal and Passwall2 
 
 > ⚡️ **One-line installation command**:
