@@ -142,7 +142,7 @@ echo -e "${MAGENTA}
 | |   ( (/ /| |__/ /| | |__ / /\ \   | |___| |___ |
 |_|    \____)_____/ |_|\___)_/  \_\   \_____/(___/ 
                                                    
-                            E Z P A S S W A L L v3.1.1 ${NC}"
+                            E Z P A S S W A L L v3.1.2 ${NC}"
 sleep 3
 
 ACTION=$(whiptail --title "Tor Control Menu" --menu "Select Action:" 15 50 6 \
