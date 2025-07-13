@@ -13,7 +13,7 @@ echo -e "${MAGENTA}
 | |   ( (/ /| |__/ /| | |__ / /\ \   | |___| |___ |
 |_|    \____)_____/ |_|\___)_/  \_\   \_____/(___/ 
                                                    
-                            E Z P A S S W A L L v3.1.1 ${NC}"
+                            E Z P A S S W A L L v3.1.2 ${NC}"
 sleep 3
 # Install required packages (except whiptail which user must already have)
 opkg update
@@ -66,7 +66,7 @@ echo "SocksPort 9050" >> /etc/tor/torrc
 if service passwall2 status > /dev/null 2>&1; then
     uci set passwall2.TorNode=nodes
     uci set passwall2.TorNode.remarks='Tor'
-    uci set passwall2.TorNode.type='Socks'
+    uci set passwall2.TorNode.type='Xray'
     uci set passwall2.TorNode.protocol='socks'
     uci set passwall2.TorNode.server='127.0.0.1'
     uci set passwall2.TorNode.port='9050'
@@ -77,7 +77,7 @@ if service passwall2 status > /dev/null 2>&1; then
 elif service passwall status > /dev/null 2>&1; then
     uci set passwall.TorNode=nodes
     uci set passwall.TorNode.remarks='Tor'
-    uci set passwall.TorNode.type='Socks'
+    uci set passwall.TorNode.type='Xray'
     uci set passwall.TorNode.protocol='socks'
     uci set passwall.TorNode.server='127.0.0.1'
     uci set passwall.TorNode.port='9050'
