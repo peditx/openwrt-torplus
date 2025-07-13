@@ -62,7 +62,35 @@ echo "SocksPort 9050" >> /etc/tor/torrc
 /etc/init.d/tor enable
 /etc/init.d/tor restart
 
-# Configure Passwall or Passwall2
+#### Configure Passwall or Passwall2
+#if service passwall2 status > /dev/null 2>&1; then
+#    uci set passwall2.TorNode=nodes
+#    uci set passwall2.TorNode.remarks='Tor'
+#    uci set passwall2.TorNode.type='Xray'
+#    uci set passwall2.TorNode.protocol='socks'
+#    uci set passwall2.TorNode.server='127.0.0.1'
+#    uci set passwall2.TorNode.port='9050'
+#    uci set passwall2.TorNode.address='127.0.0.1'
+#    uci set passwall2.TorNode.transport='tcp'
+#    uci commit passwall2
+#    echo -e "${GREEN}Passwall2 Tor node configured.${NC}"
+#elif service passwall status > /dev/null 2>&1; then
+#    uci set passwall.TorNode=nodes
+#    uci set passwall.TorNode.remarks='Tor'
+#    uci set passwall.TorNode.type='Xray'
+#    uci set passwall.TorNode.protocol='socks'
+#    uci set passwall.TorNode.server='127.0.0.1'
+#    uci set passwall.TorNode.port='9050'
+#    uci set passwall.TorNode.address='127.0.0.1'
+#    uci set passwall.TorNode.transport='tcp'
+#    uci commit passwall
+#    echo -e "${GREEN}Passwall Tor node configured.${NC}"
+#else
+#    echo -e "${RED}Passwall or Passwall2 not found! Skipping node config.${NC}"
+#fi
+#####
+
+# Configure Passwall or Passwall2 for Tor
 if service passwall2 status > /dev/null 2>&1; then
     uci set passwall2.TorNode=nodes
     uci set passwall2.TorNode.remarks='Tor'
@@ -71,9 +99,15 @@ if service passwall2 status > /dev/null 2>&1; then
     uci set passwall2.TorNode.server='127.0.0.1'
     uci set passwall2.TorNode.port='9050'
     uci set passwall2.TorNode.address='127.0.0.1'
+    uci set passwall2.TorNode.tls='0'
     uci set passwall2.TorNode.transport='tcp'
+    uci set passwall2.TorNode.tcp_guise='none'
+    uci set passwall2.TorNode.tcpMptcp='0'
+    uci set passwall2.TorNode.tcpNoDelay='0'
+
     uci commit passwall2
-    echo -e "${GREEN}Passwall2 Tor node configured.${NC}"
+    echo -e "${GREEN}Passwall2 Tor node configured successfully.${NC}"
+
 elif service passwall status > /dev/null 2>&1; then
     uci set passwall.TorNode=nodes
     uci set passwall.TorNode.remarks='Tor'
@@ -82,12 +116,19 @@ elif service passwall status > /dev/null 2>&1; then
     uci set passwall.TorNode.server='127.0.0.1'
     uci set passwall.TorNode.port='9050'
     uci set passwall.TorNode.address='127.0.0.1'
+    uci set passwall.TorNode.tls='0'
     uci set passwall.TorNode.transport='tcp'
+    uci set passwall.TorNode.tcp_guise='none'
+    uci set passwall.TorNode.tcpMptcp='0'
+    uci set passwall.TorNode.tcpNoDelay='0'
+
     uci commit passwall
-    echo -e "${GREEN}Passwall Tor node configured.${NC}"
+    echo -e "${GREEN}Passwall Tor node configured successfully.${NC}"
+
 else
-    echo -e "${RED}Passwall or Passwall2 not found! Skipping node config.${NC}"
+    echo -e "${RED}Passwall or Passwall2 not found! Skipping Tor node configuration.${NC}"
 fi
+
 
 # Create tor-control script
 cat << 'EOF' > /usr/bin/tor-control
