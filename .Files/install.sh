@@ -1,7 +1,8 @@
 #!/bin/sh
 
-# PeDitXOS Tools - TORPlus Installer v29.0 (Final ASCII Art)
-# This version adds the requested ASCII art at the end of the installation script.
+# PeDitXOS Tools - TORPlus Installer v30.1 (Final Syntax Fix)
+# This version replaces the final multi-line echo with a cat heredoc
+# to prevent shell interpretation issues and resolve syntax errors.
 
 echo ">>> Starting TORPlus installation..."
 LOG_FILE="/tmp/peditxos_torplus_log.txt"
@@ -70,7 +71,7 @@ function api_handler()
         luci.http.prepare_content("application/json")
         luci.http.write_json({running = running, ip = ip, bridge = current_bridge})
     elseif action == "toggle" then
-        if (os.execute("pgrep -f '/usr/sbin/tor' >/dev/null 2>&1") == 0) then os.execute("/etc/init.d/tor stop > " .. DEBUG_LOG_FILE .. " 2>&1 &") else os.execute("/etc/init.d/tor start > " .. DEBUG_LOG_FILE .. " 2>&1 &") end
+        if (os.execute("pgrep -f '/usr/sbin/tor' >/dev/null 2>&1") == 0) then os.execute("/etc/init.d/tor start > " .. DEBUG_LOG_FILE .. " 2>&1 &") else os.execute("/etc/init.d/tor stop > " .. DEBUG_LOG_FILE .. " 2>&1 &") end
         luci.http.prepare_content("application/json")
         luci.http.write_json({success=true})
     elseif action == "save_bridge" then
@@ -114,7 +115,7 @@ function api_handler()
 end
 EoL
     
-    # Write the LuCI view file (integrated HTML and JavaScript)
+    # Write the LuCI view file (integrated HTML and JavaScript) with the polling fix
     cat > /usr/lib/lua/luci/view/torplus/main.htm <<'EoL'
 <%+header%>
 <style>
@@ -307,6 +308,7 @@ h2{
 </div>
 
 <script type="text/javascript">
+(function() { // Wrap in a function to avoid polluting global scope
     const connectBtn = document.getElementById('connectBtn');
     const disconnectBtn = document.getElementById('disconnectBtn');
     const statusText = document.getElementById('statusText');
@@ -335,7 +337,6 @@ h2{
         });
     }
 
-    // This function will only update the connection status and IP
     function updateConnectionUI(running, ip) {
         statusText.innerText = running ? 'Connected' : 'Disconnected';
         statusIndicator.className = 'torplus-status-indicator ' + (running ? 'status-connected' : 'status-disconnected');
@@ -352,24 +353,6 @@ h2{
         }
     }
 
-    // This function is now simplified and only gets the backend status
-    function updateStatus() {
-        XHR.get('<%=luci.dispatcher.build_url("admin/services/torplus_api")%>?action=status', null, function(x, st) {
-            if (!st) return;
-            // The bridge state is now handled separately, so we only update the connection UI
-            updateConnectionUI(st.running, st.ip);
-        });
-    }
-    
-    function updateLog() {
-        XHR.get('<%=luci.dispatcher.build_url("admin/services/torplus_api")%>?action=get_debug_log', null, function(x, data) {
-            if (data && data.log) {
-                logOutput.textContent = data.log;
-                logOutput.scrollTop = logOutput.scrollHeight;
-            }
-        });
-    }
-
     function toggleService(action) {
         isApplying = true;
         if (action === 'toggle') {
@@ -381,35 +364,24 @@ h2{
                 disconnectBtn.innerText = 'Disconnecting...';
             }
         }
+        // This request is a user action, so it should show the spinner. We keep XHR.get here.
         XHR.get('<%=luci.dispatcher.build_url("admin/services/torplus_api")%>?action=' + action, null, function(x, data) {
             isApplying = false;
-            if (data && data.success) {
-                setTimeout(updateStatus, 2000);
-                setTimeout(updateLog, 500);
-            } else {
-                updateStatus();
-                updateLog();
-            }
+            // After action, a status update is needed. Let the poller handle it automatically.
         });
     }
 
     function applyBridge(bridgeType) {
-        // Immediately update UI for a responsive experience
         setBridgeUIState(bridgeType);
-        
-        // Disable all buttons to prevent double-clicks
         bridgeButtons.forEach(btn => btn.classList.add('disabled'));
 
-        // This is where the backend call is made
+        // This request is also a user action, so XHR.get is appropriate.
         XHR.get('<%=luci.dispatcher.build_url("admin/services/torplus_api")%>?action=save_bridge&bridge_type=' + bridgeType, null, function(x, data) {
             if (data && data.success) {
-                setTimeout(updateLog, 500);
                 alert('Bridge settings applied. Tor service is restarting...');
             } else {
-                updateLog();
                 alert('Failed to apply bridge settings.');
             }
-            // Re-enable all buttons after the operation is complete
             bridgeButtons.forEach(btn => btn.classList.remove('disabled'));
         });
     }
@@ -429,25 +401,49 @@ h2{
     bridgeButtons.forEach(btn => {
         btn.addEventListener('click', function() {
             const bridgeType = this.dataset.bridgeType;
-            if (this.classList.contains('selected-bridge')) {
+            if (this.classList.contains('selected-bridge') || this.classList.contains('disabled')) {
                 return;
             }
             applyBridge(bridgeType);
         });
     });
 
+    // --- START: REVISED POLLING LOGIC ---
 
-    // On initial load, read from the backend once to set the initial state
+    // Initial load to get the current state of everything at once. This uses the spinner.
     XHR.get('<%=luci.dispatcher.build_url("admin/services/torplus_api")%>?action=status', null, function(x, st) {
         if (!st) return;
         setBridgeUIState(st.bridge || 'snowflake');
         updateConnectionUI(st.running, st.ip);
-        updateLog();
+    });
+    
+    // Initial log load
+    XHR.get('<%=luci.dispatcher.build_url("admin/services/torplus_api")%>?action=get_debug_log', null, function(x, data) {
+        if (data && data.log) {
+            logOutput.textContent = data.log;
+        }
     });
 
-    // The status polling loop is now simpler and only updates connection status and IP
-    setInterval(updateStatus, 5000);
-    setInterval(updateLog, 2000);
+    // Use XHR.poll for silent background polling. Note: interval is in seconds.
+    XHR.poll(5, '<%=luci.dispatcher.build_url("admin/services/torplus_api")%>?action=status', null, function(x, st) {
+        if (st) {
+            updateConnectionUI(st.running, st.ip);
+        }
+    });
+
+    XHR.poll(2, '<%=luci.dispatcher.build_url("admin/services/torplus_api")%>?action=get_debug_log', null, function(x, data) {
+        if (data && data.log) {
+            logOutput.textContent = data.log;
+            // Only scroll to bottom if user is already near the bottom
+            const isScrolledToBottom = logOutput.scrollHeight - logOutput.clientHeight <= logOutput.scrollTop + 20;
+            if(isScrolledToBottom) {
+                logOutput.scrollTop = logOutput.scrollHeight;
+            }
+        }
+    });
+
+    // --- END: REVISED POLLING LOGIC ---
+})();
 </script>
 <%+footer%>
 EoL
@@ -508,7 +504,9 @@ rm -f /tmp/luci-indexcache
 /etc/init.d/uhttpd restart
 echo "Operation completed successfully."
 
-echo "
+# Use cat heredoc for robust multi-line output
+cat << "EOM"
+
   ______      _____   _      _    _     _____       
  (_____ \    (____ \ (_)_   \ \  / /   / ___ \     
   _____) )___ _   \ \ _| |_  \ \/ /   | |   | | ___ 
@@ -517,4 +515,5 @@ echo "
  |_|    \____)_____/ |_|\___)_/  \_\   \_____/(___/ 
                                                   
                                        TORPlus by PeDitX
-"
+
+EOM
